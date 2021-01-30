@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 public class DBHelper extends SQLiteOpenHelper {
 
-    public static final String DATABASE_NAME = "ExpenseManager.db";
+    public static final String DATABASE_NAME = "180449H.db";
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME , null, 1);
