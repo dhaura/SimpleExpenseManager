@@ -28,7 +28,7 @@ import android.support.v7.widget.Toolbar;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.R;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.ExpenseManager;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.InMemoryDemoExpenseManager;
-import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.DatabaseDemoExpenseManager;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.control.PersistentExpenseManager;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -67,9 +67,11 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(mViewPager);
 
         /***  Begin generating dummy data for In-Memory implementation  ***/
-        expenseManager = new InMemoryDemoExpenseManager();
-//        expenseManager = new DatabaseDemoExpenseManager();
+//                expenseManager = new InMemoryDemoExpenseManager();
+        /*** END ***/
 
+        /*** Setup the persistent storage implementation ***/
+                expenseManager = new PersistentExpenseManager(this);
         /*** END ***/
     }
 
