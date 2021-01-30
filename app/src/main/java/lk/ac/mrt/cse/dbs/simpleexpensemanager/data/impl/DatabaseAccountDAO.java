@@ -2,30 +2,26 @@
 package lk.ac.mrt.cse.dbs.simpleexpensemanager.data.impl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.AccountDAO;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.DBHelper;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.exception.InvalidAccountException;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
-import android.database.sqlite.SQLiteDatabase;
-
 
 public class DatabaseAccountDAO implements AccountDAO {
-    private SQLiteDatabase db;
+    private DBHelper dbHelper;
 
-    public DatabaseAccountDAO(SQLiteDatabase db) {
-        this.db = db;
+    public DatabaseAccountDAO(DBHelper dbHelper) {
+        this.dbHelper = dbHelper;
     }
 
     @Override
     public List<String> getAccountNumbersList() {
         List<String> accountNumbers = new ArrayList<String>();
-        Cursor cursor = db.rawQuery("SELECT account_no FROM account;",null);
+        Cursor cursor = dbHelper.getAccountNumbersList();
 
         if (!cursor.moveToFirst()) {
             return accountNumbers;
@@ -46,7 +42,7 @@ public class DatabaseAccountDAO implements AccountDAO {
     @Override
     public List<Account> getAccountsList() {
         List<Account> accounts = new ArrayList<Account>();
-        Cursor cursor = db.rawQuery("SELECT * FROM account;",null);
+        Cursor cursor = dbHelper.getAccountsList();
 
         if (!cursor.moveToFirst()) {
             return accounts;
@@ -66,7 +62,7 @@ public class DatabaseAccountDAO implements AccountDAO {
 
     @Override
     public Account getAccount(String accountNo) throws InvalidAccountException {
-        Cursor cursor = db.rawQuery("SELECT * FROM account WHERE account_no='"+accountNo+"';",null);
+        Cursor cursor = dbHelper.getAccount(accountNo);
         if (cursor.moveToFirst()) {
             Account account = new Account(cursor.getString(0), cursor.getString(1), cursor.getString(2), cursor.getDouble(3));
             return account;
@@ -78,15 +74,15 @@ public class DatabaseAccountDAO implements AccountDAO {
     @Override
     public void addAccount(Account account) {
 
-        db.execSQL("INSERT INTO account VALUES ('"+account.getAccountNo()+"', '"+account.getBankName()+"', '"+account.getAccountHolderName()+"', "+account.getBalance()+")");
+        dbHelper.addAccount(account.getAccountNo(), account.getBankName(), account.getAccountHolderName(),account.getBalance());
         return;
     }
 
     @Override
     public void removeAccount(String accountNo) throws InvalidAccountException {
-        Cursor resultSet = db.rawQuery("SELECT * FROM account WHERE account_no='"+accountNo+"';",null);
+        Cursor resultSet =dbHelper.getAccount(accountNo);
         if (resultSet.moveToFirst()) {
-            db.execSQL("DELETE FROM account WHERE account_no='"+accountNo+"';");
+            dbHelper.removeAccount(accountNo);
             return;
 
         }
@@ -97,24 +93,29 @@ public class DatabaseAccountDAO implements AccountDAO {
 
     @Override
     public void updateBalance(String accountNo, ExpenseType expenseType, double amount) throws InvalidAccountException {
-        Cursor resultSet = db.rawQuery("SELECT * FROM account WHERE account_no='"+accountNo+"';",null);
+        Cursor resultSet = dbHelper.getAccount(accountNo);
         if (!resultSet.moveToFirst()) {
             String msg = "Account " + accountNo + " is invalid.";
             throw new InvalidAccountException(msg);
         }
 
         double balance = resultSet.getDouble(3);
-        double newBalance;
+        double newBalance = balance;
 
         switch (expenseType) {
             case EXPENSE:
                 newBalance = balance - amount;
-                db.execSQL("UPDATE TABLE account SET balance="+newBalance+" WHERE account_no='"+accountNo+"';");
                 break;
             case INCOME:
                 newBalance = balance + amount;
-                db.execSQL("UPDATE TABLE account SET balance="+newBalance+" WHERE account_no='"+accountNo+"';");
                 break;
         }
+
+        if (newBalance < 0){
+            System.out.println("Not Enough Balance.");
+            return;
+        }
+
+        dbHelper.updateBalance(accountNo, newBalance);
     }
 }

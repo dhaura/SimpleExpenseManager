@@ -6,26 +6,29 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.TransactionDAO;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.impl.DatabaseAccountDAO;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.impl.DatabaseTransactionDAO;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
-import android.database.sqlite.SQLiteDatabase;
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.DBHelper;
+import android.content.Context;
 
 /**
  *
  */
-public class DatabaseDemoExpenseManager extends ExpenseManager {
+public class PersistentExpenseManager extends ExpenseManager {
+    private Context context;
 
-    public DatabaseDemoExpenseManager() {
+    public PersistentExpenseManager(Context context) {
+        this.context = context;
         setup();
     }
 
     @Override
     public void setup() {
 
-        SQLiteDatabase db = SQLiteDatabase.openOrCreateDatabase("ExpenseManager", null);
+        DBHelper dbHelper = new DBHelper(context);
 
-        TransactionDAO databaseTransactionDAO = new DatabaseTransactionDAO(db);
+        TransactionDAO databaseTransactionDAO = new DatabaseTransactionDAO(dbHelper);
         setTransactionsDAO(databaseTransactionDAO);
 
-        AccountDAO databseAccountDAO = new DatabaseAccountDAO(db);
+        AccountDAO databseAccountDAO = new DatabaseAccountDAO(dbHelper);
         setAccountsDAO(databseAccountDAO);
 
         // dummy data

@@ -1,16 +1,18 @@
 
 package lk.ac.mrt.cse.dbs.simpleexpensemanager.data.impl;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 
+import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.DBHelper;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.TransactionDAO;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Transaction;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
-import android.database.sqlite.SQLiteDatabase;
 
 
 /**
@@ -18,21 +20,36 @@ import android.database.sqlite.SQLiteDatabase;
  * transaction logs are stored in a LinkedList in memory.
  */
 public class DatabaseTransactionDAO implements TransactionDAO {
-    private SQLiteDatabase db;
+    private DBHelper dbHelper;
 
-    public DatabaseTransactionDAO(SQLiteDatabase db) {
-        this.db = db;
+    public DatabaseTransactionDAO(DBHelper dbHelper) {
+        this.dbHelper = dbHelper;
     }
 
     @Override
     public void logTransaction(Date date, String accountNo, ExpenseType expenseType, double amount) {
-        db.execSQL("INSERT INTO transaction_account (date, account_no, expense_type, amount) VALUES ("+date+", '"+accountNo+"', '"+expenseType+"', "+amount+")");
+        Cursor resultSet = dbHelper.getAccount(accountNo);
+        if (!resultSet.moveToFirst()) {
+            String msg = "Account " + accountNo + " is invalid.";
+            System.out.println(msg);
+        }
+
+        double balance = resultSet.getDouble(3);
+
+        if (expenseType == ExpenseType.EXPENSE && balance - amount < 0){
+            System.out.println("Not Enough Balance.");
+            return;
+        }
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String strDate = dateFormat.format(date);
+        dbHelper.logTransaction(strDate, accountNo, expenseType.name(), amount);
     }
 
     @Override
     public List<Transaction> getAllTransactionLogs() {
         List<Transaction> transactions = new ArrayList<Transaction>();
-        Cursor cursor = db.rawQuery("SELECT * FROM transaction_account;",null);
+        Cursor cursor = dbHelper.getAllTransactionLogs();
 
         if (!cursor.moveToFirst()) {
             return transactions;
@@ -41,8 +58,15 @@ public class DatabaseTransactionDAO implements TransactionDAO {
         Transaction transaction;
 
         do {
+            String strDate = cursor.getString(1);
+            Date date = null;
+            try {
+                date = new SimpleDateFormat("yyyy-MM-dd").parse(strDate);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
 
-            transaction = new Transaction(new Date(cursor.getLong(1)), cursor.getString(2), ExpenseType.valueOf(cursor.getString(3)), cursor.getDouble(4));
+            transaction = new Transaction(date, cursor.getString(2), ExpenseType.valueOf(cursor.getString(3)), cursor.getDouble(4));
             transactions.add(transaction);
 
         } while (cursor.moveToNext());
