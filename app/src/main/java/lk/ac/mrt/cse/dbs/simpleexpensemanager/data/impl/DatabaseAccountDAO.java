@@ -9,13 +9,19 @@ import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.DBHelper;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.exception.InvalidAccountException;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.Account;
 import lk.ac.mrt.cse.dbs.simpleexpensemanager.data.model.ExpenseType;
+
+import android.content.Context;
 import android.database.Cursor;
+import android.widget.Toast;
 
 public class DatabaseAccountDAO implements AccountDAO {
     private DBHelper dbHelper;
+    private Context context;
 
-    public DatabaseAccountDAO(DBHelper dbHelper) {
+    public DatabaseAccountDAO(DBHelper dbHelper, Context context) {
+
         this.dbHelper = dbHelper;
+        this.context = context;
     }
 
     @Override
@@ -73,6 +79,12 @@ public class DatabaseAccountDAO implements AccountDAO {
 
     @Override
     public void addAccount(Account account) {
+        Cursor res = dbHelper.getAccount(account.getAccountNo());
+        if (res.moveToFirst()){
+            System.out.println("Account already exists.");
+            Toast.makeText(context, "Account already exists.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         dbHelper.addAccount(account.getAccountNo(), account.getBankName(), account.getAccountHolderName(),account.getBalance());
         return;
@@ -112,7 +124,7 @@ public class DatabaseAccountDAO implements AccountDAO {
         }
 
         if (newBalance < 0){
-            System.out.println("Not Enough Balance.");
+            Toast.makeText(context, "Balance is not enough.", Toast.LENGTH_SHORT).show();
             return;
         }
 
