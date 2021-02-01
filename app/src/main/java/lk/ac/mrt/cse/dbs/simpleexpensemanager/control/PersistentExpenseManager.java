@@ -28,7 +28,7 @@ public class PersistentExpenseManager extends ExpenseManager {
         TransactionDAO databaseTransactionDAO = new DatabaseTransactionDAO(dbHelper);
         setTransactionsDAO(databaseTransactionDAO);
 
-        AccountDAO databaseAccountDAO = new DatabaseAccountDAO(dbHelper);
+        AccountDAO databaseAccountDAO = new DatabaseAccountDAO(dbHelper, context);
         setAccountsDAO(databaseAccountDAO);
 
         // dummy data

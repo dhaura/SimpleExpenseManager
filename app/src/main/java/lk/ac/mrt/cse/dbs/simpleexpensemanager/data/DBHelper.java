@@ -46,11 +46,6 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public boolean addAccount(String accountNo, String bankName, String accountHolderName, double balance){
-        Cursor res = getAccount(accountNo);
-        if (res.moveToFirst()){
-            System.out.println("Account already exists.");
-            return false;
-        }
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("account_no", accountNo);
